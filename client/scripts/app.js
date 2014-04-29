@@ -1,13 +1,37 @@
 // YOUR CODE HERE:
+
+
 var app = {};
-var currentUser = {};
-currentUser.friends= {};
 
 app.init = function(){
+  $('button').click(function(){
+    var chat = $('textarea').val();
+    var message = {
+      'username': currentUser.name,
+      'text': chat
+      // 'roomname': currentUser.roomname ||
+    };
+    var noSpacesChat = chat.replace(/\s+/g, '');
+    if (noSpacesChat){
+      app.send(message);
+      $('textarea').val('');
+    }
+  });
 };
+
 var date = new Date();
 app.startTime = date.toISOString();
 app.lastposttime = app.startTime;
+app.twentymin = 1000 * 60  * 20;
+
+app.getUserName = function(){
+  var vars = {};
+  var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+    vars[key] = value;
+  });
+  return vars;
+};
+
 
 app.server = {
     // always use this url
@@ -61,23 +85,37 @@ app.fetch = function() {
     data: { where : JSON.stringify({
       createdAt:
         {'$gt':
-        {'__type': 'Date',
-        'iso': (app.lastposttime).toString()
-        }
-
-      }
+          {'__type': 'Date',
+          'iso': (app.lastposttime).toString()
+          }
+        },
+      roomname: currentUser.roomname
     }),
     order: 'createdAt'},
     contentType: 'application/json',
     success: function (data) {
-      console.log(data);
-      app.lastposttime = data.results[data.results.length-1].createdAt;
-      console.log(app.lastposttime);
-      console.log('chatterbox: Message fetched');
+      try {
+        var results = data.results;
+        _.each(results, function (msg, i) {
+          app.addMessage(msg);
+          if(results[i].roomName) {
+           app.addRoom(results[i].roomName);
+          } else if (results[i].roomname){
+            app.addRoom(results[i].roomname);
+          }
+        });
+
+        app.lastposttime = data.results[data.results.length-1].createdAt;
+      }
+      catch(e){
+      }
     },
     error: function (data) {
       // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
       console.error('chatterbox: Failed to fetch message');
+    },
+    complete: function() {
+      app.fetch();
     }
   });
 };
@@ -88,10 +126,25 @@ app.clearMessages = function () {
 
 var count = 0;
 app.addMessage = function (message) {
+  var date = new Date(message.createdAt);
+  var hours = date.getHours();
+  var minutes = date.getMinutes();
+  var amPm = 'AM';
+  if (hours>=12){
+    if (hours!==12){
+      hours = hours-12;
+    }
+    amPm = 'PM';
+  } else if(hours===0){
+    hours = 12;
+  }
+  if(minutes<10){
+    minutes = '0' + minutes;
+  }
   var user = $('<div>' + message.username + '</div>').text();
   var msg = $('<div>' + message.text + '</div>').text();
 
-  $('#chats').append('<p><a href="#" class="username">' + user + '</a>: ' + msg + '</p>');
+  $('#chats').append('<p><b>' + hours + ':' + minutes + amPm + ' </b><a href="#" class="username">' + user + '</a>: ' + msg + '</p>');
   $('.username').unbind("click").click(function(){
     console.log('hellooooo?' + count + user);
     count++;
@@ -100,25 +153,37 @@ app.addMessage = function (message) {
 };
 
 app.addRoom = function (room) {
-  var node = $('<div>' + room + '<div>');
-  $('#roomSelect').append('<p>' + node.text() + '</p>');
-
+  if(!app.rooms[room]) {
+    var node = $('<div>' + room + '<div>');
+    app.rooms[room] = true;
+    $('select').append('<option value=' + room + '>' + room +'</option>');
+  }
 };
 
 app.addFriend = function(friendName) {
   currentUser.friends[friendName] = true;
 };
 
-// var message = {
-//   'username': '8thFloorFridge',
-//   'text': 'I need to be cleaned',
-//   'roomname': '8th Floor Kitchen'
-// };
+app.filterRoom = function(){
+  currentUser.roomname = $(':selected').text();
+  if(currentUser.roomname === 'All Chats'){
+    currentUser.roomname = undefined;
+    app.lastposttime = app.startTime;
+  }else {
+    // app.switchRoomTime = app.lastposttime;
+    var lastpost = new Date(app.lastposttime);
+    lastpost = new Date(lastpost.getTime() - app.twentymin);
+    app.lastposttime = lastpost.toISOString();
+  }
+  app.clearMessages();
+};
+
+app.rooms = {};
 
 var message = {
   'username': 'shawndrost',
   'text': 'trololo',
-  'roomname': '4chan'
+  'roomname': "4c'han"
 };
 var message2 = {
   'username': 'batman',
@@ -130,4 +195,10 @@ $(document).ready(function(){
   app.init();
 });
 
-setInterval(app.fetch, 5000);
+var currentUser = {};
+currentUser.friends= {};
+currentUser.name = app.getUserName()["username"];
+if (currentUser.name.charAt(currentUser.name.length - 1) === '#'){
+  currentUser.name = currentUser.name.slice(0, currentUser.name.length - 1);
+}
+app.fetch();
