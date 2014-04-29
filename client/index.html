@@ -17,12 +17,15 @@
       <h1>chatterbox</h1>
       <!-- Your HTML goes here! -->
       <div id="chats"></div>
-      <form><input type="text"></form>
+      <div class="form"><input type="text" class="chatDraft">
       <br>
-      <button>Send Chat</button>
+      <button class ="sendChat">Send Chat</button>
+      </div>
     </div>
     <div id="roomSelect">
       <h1>Rooms</h1>
+      <input type="text" class="newRoomName"><br>
+      <button class="newRoom">Create Room</button>
       <form action='dummy'>
       <select name="newurl" onchange="app.filterRoom(this.form)">
       <option value= "All Chats">All Chats</option>

@@ -4,17 +4,28 @@
 var app = {};
 
 app.init = function(){
-  $('button').click(function(){
-    var chat = $('input').val();
+  $('button.sendChat').click(function(){
+    var chat = $('input.chatDraft').val();
     var message = {
       'username': currentUser.name,
-      'text': chat
-      // 'roomname': currentUser.roomname ||
+      'text': chat,
+      'roomname': currentUser.roomname
     };
     var noSpacesChat = chat.replace(/\s+/g, '');
     if (noSpacesChat){
       app.send(message);
-      $('input').val('');
+      $('input.chatDraft').val('');
+    }
+  });
+  $('button.newRoom').click(function(){
+    var room = $('input.newRoomName').val();
+    var noSpacesRoom = room.replace(/\s+/g, '');
+    if (noSpacesRoom) {
+      app.addRoom(room);
+      currentUser.roomname = room;
+      $('select').val(app.rooms[room]);
+      $('input.newRoomName').val('');
+      app.clearMessages();
     }
   });
 };
@@ -153,12 +164,13 @@ app.addMessage = function (message) {
     app.addFriend(user);
   });
 };
-
+app.nextRoomID = 0;
 app.addRoom = function (room) {
   if(!app.rooms[room]) {
     var node = $('<div>' + room + '<div>');
-    app.rooms[room] = true;
-    $('select').append('<option value=' + room + '>' + room +'</option>');
+    app.rooms[room] = app.nextRoomID;
+    app.nextRoomID++;
+    $('select').append('<option value=' + app.rooms[room] + '>' + room +'</option>');
   }
 };
 
