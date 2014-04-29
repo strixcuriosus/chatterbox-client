@@ -49,9 +49,7 @@ app.server = {
     order: 'createdAt'},
     contentType: 'application/json',
     success: function (data) {
-      console.log(data);
       app.lastposttime = data.results[data.results.length-1].createdAt;
-      console.log(app.lastposttime);
       console.log('chatterbox: Message fetched');
     },
     error: function (data) {
@@ -125,6 +123,7 @@ app.clearMessages = function () {
 };
 
 var count = 0;
+
 app.addMessage = function (message) {
   var date = new Date(message.createdAt);
   var hours = date.getHours();
@@ -143,9 +142,12 @@ app.addMessage = function (message) {
   }
   var user = $('<div>' + message.username + '</div>').text();
   var msg = $('<div>' + message.text + '</div>').text();
-
-  $('#chats').append('<p><b>' + hours + ':' + minutes + amPm + ' </b><a href="#" class="username">' + user + '</a>: ' + msg + '</p>');
-  $('.username').unbind("click").click(function(){
+  var formattedMessage =  '<p><b>' + hours + ':' + minutes + amPm + ' </b><a href="#" class="username">' + user + '</a>: ' + msg + '</p>'
+  if (user in currentUser.friends) {
+    formattedMessage = '<b>' + formattedMessage + '</b>';
+  }
+  $('#chats').append(formattedMessage);
+  $('.username:last').unbind("click").click(function(){
     console.log('hellooooo?' + count + user);
     count++;
     app.addFriend(user);
@@ -161,7 +163,10 @@ app.addRoom = function (room) {
 };
 
 app.addFriend = function(friendName) {
-  currentUser.friends[friendName] = true;
+  if(!currentUser.friends[friendName]&& friendName !== currentUser.name){
+    currentUser.friends[friendName] = true;
+    $('#friends').append('<li>' + friendName + '</li>');
+  }
 };
 
 app.filterRoom = function(){
