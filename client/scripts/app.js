@@ -5,7 +5,7 @@ var app = {};
 
 app.init = function(){
   $('button').click(function(){
-    var chat = $('textarea').val();
+    var chat = $('input').val();
     var message = {
       'username': currentUser.name,
       'text': chat
@@ -14,7 +14,7 @@ app.init = function(){
     var noSpacesChat = chat.replace(/\s+/g, '');
     if (noSpacesChat){
       app.send(message);
-      $('textarea').val('');
+      $('input').val('');
     }
   });
 };
@@ -142,7 +142,7 @@ app.addMessage = function (message) {
   }
   var user = $('<div>' + message.username + '</div>').text();
   var msg = $('<div>' + message.text + '</div>').text();
-  var formattedMessage =  '<p><b>' + hours + ':' + minutes + amPm + ' </b><a href="#" class="username">' + user + '</a>: ' + msg + '</p>'
+  var formattedMessage =  '<p class="chat"><b>' + hours + ':' + minutes + amPm + ' </b><a href="#" class="username">' + user + '</a>: ' + msg + '</p>'
   if (user in currentUser.friends) {
     formattedMessage = '<b>' + formattedMessage + '</b>';
   }
