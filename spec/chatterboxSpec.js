@@ -56,6 +56,7 @@ describe('chatterbox', function() {
       it('should submit a GET request via $.ajax', function(done){
         app.fetch();
         expect($.ajax.calledOnce).to.be.true;
+        // debugger;
         expect($.ajax.args[0][0]).to.equal(app.server);
         done();
       });
